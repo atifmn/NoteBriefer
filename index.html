@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Web GUI App</title>
+    <!-- Connect the CSS file -->
+    <link rel="stylesheet" href="styling.css">
+</head>
+<body>
+    <div id="gui-container">
+        <h1>Note Summarizer</h1>
+
+         <div class="split">
+            <!-- Left side -->
+            <div class="side">
+                <h2>Upload Notes</h2>
+
+                <div class="drop-box">
+                    <p>Drag your file here</p>
+                    <input type="file">
+                </div>
+
+                <button id="action-btn">Generate</button>
+            </div>
+
+            <!-- Right side -->
+            <div class="side result-box">
+                <h2>Summary</h2>
+                <p>Your summary will appear here.</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Connect the JavaScript file -->
+    <script src="app.js"></script>
+</body>
+</html>
