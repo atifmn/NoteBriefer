@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Web GUI App</title>
+    <title>Note Summarizer</title>
     <!-- Connect the CSS file -->
     <link rel="stylesheet" href="styling.css">
 </head>
@@ -17,17 +17,18 @@
                 <h2>Upload Notes</h2>
 
                 <div class="drop-box">
-                    <p>Drag your file here</p>
-                    <input type="file" id="file-input">
+                    <p>Choose a text notes file</p>
+                    <input type="file" id="file-input" accept=".txt,.md,text/plain,text/markdown">
+                    <p id="file-status">No file selected.</p>
                 </div>
 
-                <button id="action-btn">Generate</button>
+                <button id="action-btn" type="button" disabled>Generate</button>
             </div>
 
             <!-- Right side -->
             <div id="result-box" class="side result-box">
                 <h2>Summary</h2>
-                <p>Your summary will appear here.</p>
+                <p id="result-text">Your summary will appear here.</p>
             </div>
         </div>
     </div>
