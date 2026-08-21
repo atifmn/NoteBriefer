@@ -12,7 +12,7 @@ const app = express();
 
 app.use(express.static("."));
 
-app.get("/convert", async (req, res) => {
+app.post("/api/summarize", async (req, res) => {
     try {
         const result = await //NOTE: FINISH
 
