@@ -2,6 +2,7 @@ AI-Powered note summarizer which helps shorten reading/learning time by displayi
 
 Currently finished for basic note summarizing for .txt and .md files, will soon add streaming for a smoother experience and add more options for accepted file types, such as .pdf
 
+
 Steps for additional users to run the program themselves:
 
 1. Clone this repository
@@ -9,3 +10,6 @@ Steps for additional users to run the program themselves:
 2. Duplicate the .env.example file and rename the copy to .env
 
 3. Open your new .env file and insert your personal API keys (using Google AI studio, its free)
+
+
+NOTE: You can use the website to try it out online if you would like, however there is a limited token rate per day so there is a chance that the AI has reached its limit for the day.
