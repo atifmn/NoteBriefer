@@ -55,7 +55,7 @@ actionButton.addEventListener('click', async function () {
             headers: {
                 'Content-Type': 'application/json'
             },
-            body: JSON.stringify(preparedNotes)
+            body: JSON.stringify({ content: preparedNotes.content })
         });
 
         if (!response.ok) {
