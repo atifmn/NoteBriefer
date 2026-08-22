@@ -6,6 +6,8 @@ import { GoogleGenAI } from "@google/genai";
 const API_KEY = process.env.GEMINI_API_KEY
 const ai = new GoogleGenAI({ apiKey: API_KEY });
 
+const PORT = process.env.PORT || 3000;
+
 const app = express();
 
 app.use(express.json());
@@ -28,6 +30,6 @@ app.post("/api/summarize", async (req, res) => {
     }
 });
 
-app.listen(3000, () => {
-    console.log("Open http://localhost:3000");
+app.listen(PORT, "0.0.0,0", () => {
+    console.log("Running on port: " + PORT);
 });
