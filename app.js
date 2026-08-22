@@ -63,7 +63,8 @@ actionButton.addEventListener('click', async function () {
         }
 
         const data = await response.json();
-        resultText.textContent = data.summary;
+        
+        resultText.textContent = data.result;
     } catch (error) {
         resultText.textContent = error.message;
     } finally {
