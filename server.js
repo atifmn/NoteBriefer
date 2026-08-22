@@ -1,12 +1,10 @@
-require("dotenv").config();
+import express from 'express';
+import 'dotenv/config'; 
 
 import { GoogleGenAI } from "@google/genai";
-require("dotenv").config();
 
 const API_KEY = process.env.GEMINI_API_KEY
 const ai = new GoogleGenAI({ apiKey: API_KEY });
-
-const express = require("express");
 
 const app = express();
 
@@ -14,7 +12,14 @@ app.use(express.static("."));
 
 app.post("/api/summarize", async (req, res) => {
     try {
-        const result = await //NOTE: FINISH
+        // const result = await
+
+        const interaction = await ai.interactions.create({
+            model: "gemini-3.7-flash",
+            input: "Explain how AI works in a few words",
+        });
+
+        let result = interaction.output_text;
 
         res.json({ result });
     } catch (error) {
