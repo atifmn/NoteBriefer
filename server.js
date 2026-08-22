@@ -8,15 +8,16 @@ const ai = new GoogleGenAI({ apiKey: API_KEY });
 
 const app = express();
 
+app.use(express.json());
 app.use(express.static("."));
 
+// NOTE: UPDATE ONCE COMPLETED AND ADD STREAMING FOR GENERATED RESPONSE, ALSO ADD OPTION TO USE PDF FILES
 app.post("/api/summarize", async (req, res) => {
     try {
-        // const result = await
-
+        
         const interaction = await ai.interactions.create({
             model: "gemini-3.7-flash",
-            input: "Explain how AI works in a few words",
+            input: "Summarize the most important piece of these notes given, be specific, be straight to the point, and only answer if the given notes are school or academic related, otherwise inform the user to please provide academic notes.\n\n" + req.body.content,
         });
 
         let result = interaction.output_text;
