@@ -1,7 +1,12 @@
 {
+  "type": "module",
   "dependencies": {
     "@google/genai": "^2.17.1",
     "dotenv": "^17.4.2",
     "express": "^5.2.1"
+  },
+  "allowScripts": {
+    "@google/genai@2.17.1": true,
+    "protobufjs@7.6.5": true
   }
 }
