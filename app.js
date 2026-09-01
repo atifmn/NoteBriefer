@@ -58,11 +58,12 @@ actionButton.addEventListener('click', async function () {
             body: JSON.stringify({ content: preparedNotes.content })
         });
 
-        if (!response.ok) {
-            throw new Error('The backend could not generate a summary.');
-        }
+        const data = await response.json().catch(() => ({}));
 
-        const data = await response.json();
+        if (!response.ok) {
+            const message = data.error || 'The backend could not generate a summary.';
+            throw new Error(`Error ${data.status || response.status}: ${message}`);
+        }
         
         resultText.textContent = data.result;
     } catch (error) {
