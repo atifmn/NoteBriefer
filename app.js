@@ -4,11 +4,60 @@ const resultBox = document.getElementById('result-box');
 const fileInput = document.getElementById('file-input');
 const fileStatus = document.getElementById('file-status');
 const resultText = document.getElementById('result-text');
+const loginButton = document.getElementById('login-btn');
+const logoutButton = document.getElementById('logout-btn');
+const userStatus = document.getElementById('user-status');
+
+const SUPABASE_URL = 'https://owaivsmckmdbqktrjisl.supabase.co';
+const SUPABASE_PUBLISHABLE_KEY = 'sb_publishable_-PpuNLLEnz_BQXxMWL9p7g_1h7ALI2E';
+
+const supabaseClient = window.supabase.createClient(
+    SUPABASE_URL,
+    SUPABASE_PUBLISHABLE_KEY
+);
 
 // Change this if your backend uses a different route.
 const API_URL = '/api/summarize';
 
 let preparedNotes = null;
+
+// Determines which buttons to show based on if the user is logged in or not
+function updateAuthDisplay(session) {
+    const user = session?.user;
+
+    if (user) {
+        userStatus.textContent = `Signed in as ${user.email}`;
+        loginButton.hidden = true;
+        logoutButton.hidden = false;
+    } else {
+        userStatus.textContent = 'Not signed in';
+        loginButton.hidden = false;
+        logoutButton.hidden = true;
+    }
+}
+
+loginButton.addEventListener('click', async function () {
+    const {error} = await supabaseClient.auth.signInWithOAuth({
+        provider: 'google',
+        options: {
+            redirectTo: window.location.origin
+        }
+    });
+
+    if (error){
+        userStatus.textContent = "Login Failed: " + error.message;
+    }
+    
+});
+
+logoutButton.addEventListener('click', async function () {
+    const {error} = await supabaseClient.auth.signOut();
+
+    if (error){
+        userStatus.textContent = "Logout Failed: " + error.message;
+    }
+    
+});
 
 // Read the selected text file and prepare the data for the backend.
 async function prepareFile(file) {
@@ -72,3 +121,20 @@ actionButton.addEventListener('click', async function () {
         actionButton.disabled = false;
     }
 });
+
+async function initializeAuth() {
+    const { data, error } = await supabaseClient.auth.getSession();
+
+    if (error) {
+        userStatus.textContent = `Authentication error: ${error.message}`;
+        return;
+    }
+
+    updateAuthDisplay(data.session);
+}
+
+supabaseClient.auth.onAuthStateChange(function (_event, session) {
+    updateAuthDisplay(session);
+});
+
+initializeAuth();
