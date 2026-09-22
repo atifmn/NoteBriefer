@@ -26,7 +26,7 @@ app.post("/api/summarize", async (req, res) => {
         }
         
         const interaction = await ai.interactions.create({
-            model: "gemini-3.7-flash",
+            model: "gemini-3.5-flash-lite",
             input: "Summarize the most important piece of these notes given, be specific, be straight to the point, and only answer if the given notes are school or academic related, otherwise inform the user to please provide academic notes.\n\n" + req.body.content,
         }, {
             // Keep diagnostic tests from automatically creating extra API attempts.
