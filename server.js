@@ -2,6 +2,14 @@ import express from 'express';
 import 'dotenv/config'; 
 
 import { GoogleGenAI } from "@google/genai";
+import { createClient } from '@supabase/supabase-js';
+
+// These are public project credentials, the same ones used by the frontend.
+const supabase = createClient(
+    'https://owaivsmckmdbqktrjisl.supabase.co',
+    'sb_publishable_-PpuNLLEnz_BQXxMWL9p7g_1h7ALI2E',
+    { auth: { persistSession: false, autoRefreshToken: false } }
+);
 
 const API_KEY = process.env.GEMINI_API_KEY
 const ai = new GoogleGenAI({ apiKey: API_KEY });
@@ -15,8 +23,29 @@ const app = express();
 app.use(express.json());
 app.use(express.static("."));
 
+async function requireUser(req, res, next) {
+    const token = req.get('Authorization')?.match(/^Bearer\s+(\S+)$/i)?.[1];
+
+    if (!token) {
+        return res.status(401).json({ status: 401, error: 'Please sign in to generate a summary.' });
+    }
+
+    try {
+        // Verify with Supabase; never trust a user ID supplied by the browser.
+        const { data, error } = await supabase.auth.getUser(token);
+        if (error || !data.user) {
+            return res.status(401).json({ status: 401, error: 'Your session is invalid or expired. Please sign in again.' });
+        }
+
+        req.user = data.user;
+        next();
+    } catch (error) {
+        next(error);
+    }
+}
+
 // NOTE: UPDATE ONCE COMPLETED AND ADD STREAMING FOR GENERATED RESPONSE, ALSO ADD OPTION TO USE PDF FILES
-app.post("/api/summarize", async (req, res) => {
+app.post("/api/summarize", requireUser, async (req, res) => {
     try {
         if (!req.body?.content) {
             return res.status(400).json({

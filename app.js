@@ -20,10 +20,18 @@ const supabaseClient = window.supabase.createClient(
 const API_URL = '/api/summarize';
 
 let preparedNotes = null;
+let isSignedIn = false;
+let isGenerating = false;
+
+function updateGenerateButton() {
+    actionButton.disabled = !isSignedIn || !preparedNotes || isGenerating;
+}
 
 // Determines which buttons to show based on if the user is logged in or not
 function updateAuthDisplay(session) {
     const user = session?.user;
+    isSignedIn = Boolean(user);
+    updateGenerateButton();
 
     if (user) {
         userStatus.textContent = `Signed in as ${user.email}`;
@@ -86,23 +94,34 @@ fileInput.addEventListener('change', async function () {
     try {
         preparedNotes = await prepareFile(selectedFile);
         fileStatus.textContent = `Ready: ${selectedFile.name}`;
-        actionButton.disabled = false;
+        updateGenerateButton();
     } catch (error) {
         fileStatus.textContent = error.message;
     }
 });
 
 actionButton.addEventListener('click', async function () {
-    if (!preparedNotes) return;
+    if (!preparedNotes || !isSignedIn || isGenerating) return;
 
-    actionButton.disabled = true;
+    isGenerating = true;
+    updateGenerateButton();
     resultText.textContent = 'Generating summary...';
 
     try {
+        // Get the current access token, including any refreshed session.
+        const { data: sessionData, error: sessionError } = await supabaseClient.auth.getSession();
+        if (sessionError) throw sessionError;
+
+        updateAuthDisplay(sessionData.session);
+        if (!sessionData.session?.access_token) {
+            throw new Error('Please sign in to generate a summary.');
+        }
+
         const response = await fetch(API_URL, {
             method: 'POST',
             headers: {
-                'Content-Type': 'application/json'
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${sessionData.session.access_token}`
             },
             body: JSON.stringify({ content: preparedNotes.content })
         });
@@ -118,7 +137,8 @@ actionButton.addEventListener('click', async function () {
     } catch (error) {
         resultText.textContent = error.message;
     } finally {
-        actionButton.disabled = false;
+        isGenerating = false;
+        updateGenerateButton();
     }
 });
 
