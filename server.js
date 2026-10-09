@@ -46,6 +46,7 @@ async function requireUser(req, res, next) {
 
 // NOTE: UPDATE ONCE COMPLETED AND ADD STREAMING FOR GENERATED RESPONSE, ALSO ADD OPTION TO USE PDF FILES
 app.post("/api/summarize", requireUser, async (req, res) => {
+    const timeoutSignal = AbortSignal.timeout(120_000); // Two minutes.
     try {
         if (!req.body?.content) {
             return res.status(400).json({
@@ -59,13 +60,21 @@ app.post("/api/summarize", requireUser, async (req, res) => {
             input: "Summarize the most important piece of these notes given, be specific, be straight to the point, and only answer if the given notes are school or academic related, otherwise inform the user to please provide academic notes.\n\n" + req.body.content,
         }, {
             // Keep diagnostic tests from automatically creating extra API attempts.
-            maxRetries: 0
+            maxRetries: 0,
+            fetchOptions: { signal: timeoutSignal }
         });
 
         let result = interaction.output_text;
 
         res.json({ result });
     } catch (error) {
+        if (timeoutSignal.aborted) {
+            return res.status(504).json({
+                status: 504,
+                error: 'Summary generation took longer than two minutes. Please try again later.'
+            });
+        }
+
         const errorStatus = Number(error.status ?? error.statusCode);
         const status = errorStatus >= 400 && errorStatus <= 599 ? errorStatus : 500;
         const message = error.message || "The Gemini request failed.";

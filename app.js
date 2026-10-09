@@ -106,6 +106,8 @@ actionButton.addEventListener('click', async function () {
     isGenerating = true;
     updateGenerateButton();
     resultText.textContent = 'Generating summary...';
+    const controller = new AbortController();
+    let timeoutId;
 
     try {
         // Get the current access token, including any refreshed session.
@@ -117,7 +119,10 @@ actionButton.addEventListener('click', async function () {
             throw new Error('Please sign in to generate a summary.');
         }
 
+        // Allow a little extra time to receive the server's two-minute timeout error.
+        timeoutId = setTimeout(() => controller.abort(), 130_000);
         const response = await fetch(API_URL, {
+            signal: controller.signal,
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
@@ -126,7 +131,10 @@ actionButton.addEventListener('click', async function () {
             body: JSON.stringify({ content: preparedNotes.content })
         });
 
-        const data = await response.json().catch(() => ({}));
+        const data = await response.json().catch(error => {
+            if (controller.signal.aborted) throw error;
+            return {};
+        });
 
         if (!response.ok) {
             const message = data.error || 'The backend could not generate a summary.';
@@ -135,8 +143,11 @@ actionButton.addEventListener('click', async function () {
         
         resultText.textContent = data.result;
     } catch (error) {
-        resultText.textContent = error.message;
+        resultText.textContent = controller.signal.aborted
+            ? 'The summary request timed out. Please try again later.'
+            : error.message;
     } finally {
+        clearTimeout(timeoutId);
         isGenerating = false;
         updateGenerateButton();
     }
