@@ -40,13 +40,17 @@
             <!-- Right side -->
             <div id="result-box" class="side result-box">
                 <h2>Summary</h2>
-                <p id="result-text">Your summary will appear here.</p>
+                <div id="result-text">Your summary will appear here.</div>
             </div>
         </div>
     </div>
 
     <!-- Connect the SupaBase DB -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+    <!-- Format Markdown and remove unsafe HTML from summaries -->
+    <script src="https://cdn.jsdelivr.net/npm/marked@18.1.1/lib/marked.umd.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/dompurify@3.4.17/dist/purify.min.js"></script>
 
     <!-- Connect the JavaScript file -->
     <script src="app.js"></script>

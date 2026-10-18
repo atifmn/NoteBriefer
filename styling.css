@@ -58,6 +58,7 @@ body {
 
 .side {
     flex: 1;
+    min-width: 0;
 }
 
 .drop-box,
@@ -100,4 +101,22 @@ button:disabled {
 
 #file-status {
     font-size: 14px;
+}
+
+#result-text {
+    text-align: left;
+    line-height: 1.6;
+    overflow-wrap: anywhere;
+}
+
+#result-text ul,
+#result-text ol {
+    padding-left: 24px;
+}
+
+#result-text pre {
+    background: #f0f2f5;
+    padding: 12px;
+    border-radius: 6px;
+    overflow-x: auto;
 }

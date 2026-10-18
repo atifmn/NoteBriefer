@@ -141,7 +141,8 @@ actionButton.addEventListener('click', async function () {
             throw new Error(`Error ${data.status || response.status}: ${message}`);
         }
         
-        resultText.textContent = data.result;
+        // Convert Markdown to HTML, then clean it before displaying it.
+        resultText.innerHTML = DOMPurify.sanitize(marked.parse(data.result));
     } catch (error) {
         resultText.textContent = controller.signal.aborted
             ? 'The summary request timed out. Please try again later.'
