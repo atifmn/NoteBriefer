@@ -44,9 +44,11 @@ async function requireUser(req, res, next) {
     }
 }
 
-// NOTE: UPDATE ONCE COMPLETED AND ADD STREAMING FOR GENERATED RESPONSE, ALSO ADD OPTION TO USE PDF FILES
+// TODO: Add support for PDF files.
 app.post("/api/summarize", requireUser, async (req, res) => {
     const timeoutSignal = AbortSignal.timeout(120_000); // Two minutes.
+    const controller = new AbortController();
+    res.on('close', () => controller.abort());
     try {
         if (!req.body?.content) {
             return res.status(400).json({
@@ -55,19 +57,49 @@ app.post("/api/summarize", requireUser, async (req, res) => {
             });
         }
         
-        const interaction = await ai.interactions.create({
+        const stream = await ai.interactions.create({
             model: "gemini-3.5-flash-lite",
+            stream: true,
             input: "Summarize the most important piece of these notes given, be specific, be straight to the point, and only answer if the given notes are school or academic related, otherwise inform the user to please provide academic notes.\n\n" + req.body.content,
         }, {
             // Keep diagnostic tests from automatically creating extra API attempts.
             maxRetries: 0,
-            fetchOptions: { signal: timeoutSignal }
+            fetchOptions: { signal: AbortSignal.any([timeoutSignal, controller.signal]) }
         });
 
-        let result = interaction.output_text;
+        let hasText = false;
+        for await (const event of stream) {
+            timeoutSignal.throwIfAborted();
+            if (event.event_type === 'step.delta' && event.delta?.type === 'text' && event.delta.text) {
+                if (!hasText) {
+                    res.set({
+                        'Content-Type': 'text/plain; charset=utf-8',
+                        'Cache-Control': 'no-cache, no-transform',
+                        'X-Accel-Buffering': 'no'
+                    });
+                    hasText = true;
+                }
+                res.write(event.delta.text);
+            } else if (event.event_type === 'error') {
+                throw new Error(event.error?.message || 'Summary generation failed.');
+            } else if (event.event_type === 'interaction.completed') {
+                if (!hasText || event.interaction.status !== 'completed') {
+                    throw new Error('The AI could not finish the summary. Please try again later.');
+                }
+                res.end();
+                return;
+            }
+        }
 
-        res.json({ result });
+        throw new Error('The summary stream ended unexpectedly.');
     } catch (error) {
+        // Once text has been sent, close the stream so the browser detects the failure.
+        if (res.headersSent) {
+            console.error('Summary stream failed:', error.message);
+            res.destroy();
+            return;
+        }
+
         if (timeoutSignal.aborted) {
             return res.status(504).json({
                 status: 504,

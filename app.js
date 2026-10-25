@@ -108,6 +108,7 @@ actionButton.addEventListener('click', async function () {
     resultText.textContent = 'Generating summary...';
     const controller = new AbortController();
     let timeoutId;
+    let summary = '';
 
     try {
         // Get the current access token, including any refreshed session.
@@ -131,24 +132,31 @@ actionButton.addEventListener('click', async function () {
             body: JSON.stringify({ content: preparedNotes.content })
         });
 
-        const data = await response.json().catch(error => {
-            if (controller.signal.aborted) throw error;
-            return {};
-        });
-
         if (!response.ok) {
+            const data = await response.json().catch(error => {
+                if (controller.signal.aborted) throw error;
+                return {};
+            });
             const message = data.error || 'The backend could not generate a summary.';
             throw new Error(`Error ${data.status || response.status}: ${message}`);
         }
-        
-        // Convert Markdown to HTML, then clean it before displaying it.
-        resultText.innerHTML = DOMPurify.sanitize(marked.parse(data.result));
+
+        // Read text as it arrives and update the formatted summary.
+        const reader = response.body.pipeThrough(new TextDecoderStream()).getReader();
+        while (true) {
+            const { value, done } = await reader.read();
+            if (done) break;
+            summary += value;
+            resultText.innerHTML = DOMPurify.sanitize(marked.parse(summary));
+        }
+        if (!summary.trim()) throw new Error('The AI returned no summary. Please try again later.');
     } catch (error) {
         resultText.textContent = controller.signal.aborted
             ? 'The summary request timed out. Please try again later.'
-            : error.message;
+            : summary ? 'The summary was interrupted. Please try again later.' : error.message;
     } finally {
         clearTimeout(timeoutId);
+        controller.abort();
         isGenerating = false;
         updateGenerateButton();
     }
